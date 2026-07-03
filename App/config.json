@@ -1,6 +1,6 @@
 {
   "target_dir": "/mnt/us/Books",
-  "ssh_key_file_path": "/Users/samiyusuf/.ssh/id_ecdsa",
-  "ip_device": "192.168.0.58",
+  "ssh_key_file_path": "/Users/username/.ssh/id_ecdsa",
+  "ip_device": "192.168.10.124",
   "host_name": "root"
 }
