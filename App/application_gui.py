@@ -11,6 +11,9 @@ import json
 
 #File
 from App.application_functionality import run_application_functionality
+from Test.testing_app import run_test_functionality
+
+mock_client=True # used for testing
 
 # Reason for using class instead of a function
 #   1. Organized we know which widgets belong to which app cuz of self
@@ -23,6 +26,9 @@ class KindleApp(ctk.CTk):
         self.title("TBTK")
         self.geometry("600x500")
         self.resizable(width=False,height=True)
+
+        #Variables
+        self.config_file_path = "App/config.json"
 
         #WIDGETS
         #Framing details
@@ -73,12 +79,19 @@ class KindleApp(ctk.CTk):
             size=(30,30)
         )
         self.run_button = ctk.CTkButton(
-            self.title_frame,text="",image=self.run_img,width=30,command=self.returnArguments
+            self.title_frame,text="",image=self.run_img,width=30,command=self.runScript
         )
 
         #Setting target directory
             # this is shared variable between options
             # default value is kindle_option
+
+        self.save_config_button = ctk.CTkButton(
+            master=self.left_frame,
+            text="Save configurations",
+            command=self.saveToConfigFile
+        )
+        
         self.target_dir = ctk.StringVar(value="Type target folder...")
 
         self.kindle_option = ctk.CTkRadioButton(
@@ -181,6 +194,7 @@ class KindleApp(ctk.CTk):
         self.right_frame.pack(side="right",fill="both",expand=True)
         self.bottom_frame.pack(fill="both",expand=True)
 
+        self.save_config_button.pack(pady=10)
         self.kindle_option.pack(pady=10)
         self.koreader_option.pack(pady=10)
         self.set_own_option.pack(pady=10)
@@ -219,6 +233,29 @@ class KindleApp(ctk.CTk):
         except FileNotFoundError as err:
             print("Config file not found: ", err)
 
+    #Functions - Save to config file
+    def saveToConfigFile(self):
+        data = self.returnArguments()
+
+        try:
+            with open(self.config_file_path,"r") as f:
+                configs = json.load(f)
+            
+            configs["host_name"] = data[0]
+            configs["ip_device"] = data[1]
+            configs["ssh_key_file_path"] = data[2]
+            configs["target_dir"] = data[3]
+
+            with open(self.config_file_path,"w") as f:
+                json.dump(configs,f,indent=2)
+
+            f.close()
+
+            print("Saved configurations")
+
+        except FileNotFoundError as err:
+            print("Config file not found: ", err)
+
     #Functions - Title functions
     def returnArguments(self):
         # collect the data from boxes
@@ -235,16 +272,26 @@ class KindleApp(ctk.CTk):
         
         collect_list_books = self.books
 
-        # return as array of arguments
-        self.runScript(
+         # return as array of arguments
+        return (
             collect_host_name,
             collect_ip_device,
             collect_ssh_entry,
             collect_target_dir,
             collect_list_books
         )
-    def runScript(self,host_name, ip_device, ssh_key_file_path,target_dir, books_dict):
-        run_application_functionality(host_name, ip_device, ssh_key_file_path,target_dir, books_dict)
+    def runScript(self):
+        data = self.returnArguments()
+        host_name = data[0]
+        ip_device = data[1]
+        ssh_key_file_path = data[2]
+        target_dir = data[3]
+        books_dict = data[4]
+
+        if(mock_client):
+            run_test_functionality(books_dict)
+        else:
+            run_application_functionality(host_name, ip_device, ssh_key_file_path,target_dir, books_dict)
 
     #Functions - Setting target dir
     def setTargetDir(self):
