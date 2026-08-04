@@ -9,13 +9,6 @@ class TransferFiles:
         self.books=books_dict
   
     def uploadFileSSH(self):
-        # decoding 
-        # print(
-        #     target_dir, '\n',
-        #     ip_device, '\n',
-        #     host_name, '\n',
-        #     ssh_key_file_path
-        # )
         session = paramiko.SSHClient()
 
         # auto add host key 
@@ -30,14 +23,12 @@ class TransferFiles:
             port=2222,
             pkey=key_file
         )
-
+        print("start file upload")
         ftp_client = session.open_sftp()
         
         for key,value in self.books.items():
             local_file_path=value
             remote_file_path = self.target_dir + '/' + key
-            # print(local_file_path)
-            # print(remote_file_path)
             try:
                 print(f"Uploading file {key}")
                 ftp_client.put(local_file_path,remote_file_path)
