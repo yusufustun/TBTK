@@ -15,7 +15,7 @@ import json
 from App.application_functionality import run_application_functionality
 from Test.testing_app import run_test_functionality
 
-mock_client=True # used for testing
+mock_client=False # used for testing
 
 # Reason for using class instead of a function
 #   1. Organized we know which widgets belong to which app cuz of self
@@ -135,7 +135,16 @@ class KindleApp(ctk.CTk):
             placeholder_text="root",
             width=220, height=50,
         )
-
+        self.port_entry_label = ctk.CTkLabel(
+                    master=self.right_frame,
+                    text="Port: ",
+                    width=150, height=50
+        )
+        self.port_entry = ctk.CTkEntry(
+            master=self.right_frame,
+            placeholder_text="2222",
+            width=220, height=50,
+        )
         self.ip_entry_label = ctk.CTkLabel(
             master=self.right_frame,
             text="IP of device:",
@@ -205,11 +214,14 @@ class KindleApp(ctk.CTk):
         self.host_name_entry_label.grid(row=0,column=0,pady=5)
         self.host_name_entry.grid(row=0,column=1,pady=5)
 
-        self.ip_entry_label.grid(row=1,column=0,pady=5)
-        self.ip_entry.grid(row=1,column=1,pady=5)
+        self.port_entry_label.grid(row=1,column=0,pady=5)
+        self.port_entry.grid(row=1,column=1,pady=5)
 
-        self.ssh_entry_label.grid(row=2,column=0,pady=5)
-        self.ssh_entry.grid(row=2,column=1,pady=5)
+        self.ip_entry_label.grid(row=2,column=0,pady=5)
+        self.ip_entry.grid(row=2,column=1,pady=5)
+
+        self.ssh_entry_label.grid(row=3,column=0,pady=5)
+        self.ssh_entry.grid(row=3,column=1,pady=5)
 
         self.file_picker_title_frame.grid(row=0,column=0)
         self.select_folder_file_frame.grid(row=1,column=0)
@@ -229,6 +241,7 @@ class KindleApp(ctk.CTk):
                 configs = json.load(f)
             self.host_name_entry.insert(0,configs["host_name"])
             self.ip_entry.insert(0,configs["ip_device"])
+            self.port_entry.insert(0,configs["port"])
             self.ssh_entry.insert(0,configs["ssh_key_file_path"])
             self.set_own_option_entry.insert(0,configs["target_dir"])
             f.close()
@@ -246,8 +259,9 @@ class KindleApp(ctk.CTk):
             
             configs["host_name"] = data[0]
             configs["ip_device"] = data[1]
-            configs["ssh_key_file_path"] = data[2]
-            configs["target_dir"] = data[3]
+            configs["port"]=data[2]
+            configs["ssh_key_file_path"] = data[3]
+            configs["target_dir"] = data[4]
 
             with open(self.config_file_path,"w") as f:
                 json.dump(configs,f,indent=2)
@@ -263,7 +277,7 @@ class KindleApp(ctk.CTk):
 
         #displays success or error message
     def displaySavedConfigErrorMessage(self):
-        template_config_file = '{"target_dir": "", "ssh_key_file_path": "", "ip_device": "", "host_name": "" }'
+        template_config_file = '{"target_dir": "", "ssh_key_file_path": "", "ip_device": "", "port": "","host_name": "" }'
 
         # if user clicks yes we write the template of a config file, and save what they had in input boxes into config file 
         if (messagebox.askyesnocancel("askyesnocancel","Config files doesn't exist. Create a config file?")):
@@ -282,13 +296,19 @@ class KindleApp(ctk.CTk):
     
     def getHostName(self) -> str:
         return self.host_name_entry.get().strip()
+
+    def getPort(self) -> str:
+        return self.port_entry.get().strip()
     
     def returnArguments(self) -> tuple:
         # collect the data from boxes
         collect_target_dir = self.setTargetDir()
 
-        collect_host_name = self.host_name_entry.get().strip()
+        collect_host_name = self.getHostName()
         collect_host_name = collect_host_name or "root"
+
+        collect_port = self.getPort()
+        collect_port = collect_port or "2222"
 
         collect_ip_device = self.ip_entry.get().strip()
         collect_ip_device = collect_ip_device or "192.168.10.19"
@@ -302,6 +322,7 @@ class KindleApp(ctk.CTk):
         return (
             collect_host_name,
             collect_ip_device,
+            collect_port,
             collect_ssh_entry,
             collect_target_dir,
             collect_list_books
@@ -310,14 +331,15 @@ class KindleApp(ctk.CTk):
         data = self.returnArguments()
         host_name = data[0]
         ip_device = data[1]
-        ssh_key_file_path = data[2]
-        target_dir = data[3]
-        books_dict = data[4]
+        port = data[2]
+        ssh_key_file_path = data[3]
+        target_dir = data[4]
+        books_dict = data[5]
 
         if(mock_client):
             run_test_functionality(books_dict)
         else:
-            run_application_functionality(host_name, ip_device, ssh_key_file_path,target_dir, books_dict)
+            run_application_functionality(host_name, ip_device, port, ssh_key_file_path, target_dir, books_dict)
 
     #Functions - Setting target dir
     def setTargetDir(self) -> str:
